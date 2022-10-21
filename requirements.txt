@@ -1,0 +1,9 @@
+pandas
+openpyxl
+numpy
+click
+typing-extensions
+pytest
+pytest-cov
+pydantic
+dynaconf
