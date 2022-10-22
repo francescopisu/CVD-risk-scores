@@ -131,7 +131,6 @@ class FraminghamRiskScore(RiskModel):
         ArrayLike
             an array of scores, one for each subject
         """
-        print(col_order_idxs)
         def compute_single_from_slice(aslice, columns: List[str], indexes: List[int]) -> float:
             sub = self.template(**dict(zip(columns, aslice[indexes])))
             return self.fn(sub)
