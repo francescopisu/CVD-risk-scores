@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from cvd_risk_scores.src.modules import FraminghamRiskScore
+from src.cvd_risk_scores.modules import FraminghamRiskScore
 
 @pytest.fixture
 def female_subject():

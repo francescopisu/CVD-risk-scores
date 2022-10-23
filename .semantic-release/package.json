@@ -1,0 +1,13 @@
+{
+    "name": "CVD-risk-scores",
+    "version": "0.0.0",
+    "scripts": {
+      "installInRoot": "npm install && mv ./node_modules ./../node_modules"
+    },
+    "devDependencies": {
+      "semantic-release": "19.0.5",
+      "@semantic-release/changelog": "6.0.1",
+      "@semantic-release/exec": "6.0.3",
+      "@semantic-release/git": "10.0.1"
+    }
+  }
