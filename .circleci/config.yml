@@ -17,12 +17,12 @@ jobs:
     steps:
       - checkout
       - run:
-        name: install semantic release dependencies in root
-        command: |
-          npm --prefix .semantic-release run installInRoot
+          name: install semantic release dependencies in root
+          command: |
+            npm --prefix .semantic-release run installInRoot
       - run:
-        name: run semantic release
-        command: npx semantic-release
+          name: run semantic release
+          command: npx semantic-release
 
   build-and-test: 
     executor: python-3-9-6
@@ -55,27 +55,27 @@ jobs:
           keys:
             - python-cache-{{ checksum "requirements.txt" }}
       - run:
-        name: install dependencies
-        command: |
-          pip install -r requirements.txt
-          pip install twine
+          name: install dependencies
+          command: |
+            pip install -r requirements.txt
+            pip install twine
       - run:
-        name: create the distribution
-        command: |
-          python setup.py sdist
+          name: create the distribution
+          command: |
+            python setup.py sdist
 
-          CHECKS=$(twine check dist/* | grep -c "PASSED")
-          N_FILES=$(( $(ls -l dist | wc -l) -1 ))
+            CHECKS=$(twine check dist/* | grep -c "PASSED")
+            N_FILES=$(( $(ls -l dist | wc -l) -1 ))
 
-          if [[ $CHECKS -ne $N_FILES ]]
-          then
-            echo "twine checks failed"
-            exit 1
-          fi
+            if [[ $CHECKS -ne $N_FILES ]]
+            then
+              echo "twine checks failed"
+              exit 1
+            fi
       - run:
-        name: push to pypi
-        command: |
-          twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
+          name: push to pypi
+          command: |
+            twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
 workflows:
   version: 2
   build-release:
