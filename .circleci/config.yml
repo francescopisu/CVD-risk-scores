@@ -86,9 +86,10 @@ workflows:
               only: "main"
       - build-and-test:
           filters:
-            only: /.*/
-          branches:
-            ignore: "main"
+            tags:
+              only: /.*/
+            branches:
+              ignore: "main"
       - release:
           requires:
             - build-and-test
