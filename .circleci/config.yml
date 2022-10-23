@@ -79,20 +79,21 @@ jobs:
 workflows:
   version: 2
   build-release:
-    - generate-version:
-        filters:
+    jobs:
+      - generate-version:
+          filters:
+            branches:
+              only: "main"
+      - build-and-test:
+          filters:
+            only: /.*/
           branches:
-            only: "main"
-    - build-and-test:
-        filters:
-          only: /.*/
-        branches:
-          ignore: "main"
-    - release:
-        requires:
-          - build-and-test
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^deploy-.*/
+            ignore: "main"
+      - release:
+          requires:
+            - build-and-test
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^deploy-.*/
