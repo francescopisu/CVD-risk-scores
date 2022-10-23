@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cvd_risk_scores.config import settings
+from src.config import settings
 
 @pytest.fixture
 def rng() -> np.random.Generator:
