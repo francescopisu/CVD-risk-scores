@@ -7,6 +7,7 @@ if sys.platform == 'win32' and sys.maxsize.bit_length() == 31:
     sys.exit(-1)
 
 import pathlib
+import traceback
 import logging
 import platform
 from setuptools import setup, find_packages
@@ -23,6 +24,8 @@ SOURCE_DIR = "src"
 PROJECT_NAME = "cvd_risk_scores"
 
 def main():
+    long_description = (DIR / 'README.md').read_text()
+
     try:
         changelog = (DIR / 'CHANGELOG.md').read_text()
         __version__, *_ = re.findall(r"\[([0-9.]+)]", changelog)
@@ -55,8 +58,8 @@ def main():
         include_package_data=True,
         classifiers=[
             'Development Status :: 2 - Pre-Alpha',
-            'Intended Audience :: Developers, Researchers',
-            'Topic :: Software Development :: Applied Research',
+            'Intended Audience :: Science/Research',
+            'Topic :: Scientific/Engineering :: Medical Science Apps.',
             'License :: OSI Approved :: MIT License',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.7',
@@ -64,3 +67,7 @@ def main():
             'Programming Language :: Python :: 3.9',
         ]
     )        
+
+
+if __name__ == "__main__":
+    main()
