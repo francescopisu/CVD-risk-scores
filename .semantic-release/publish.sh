@@ -1,0 +1,1 @@
+echo "$1" > /tmp/CVD-risk-scores-next-tag
