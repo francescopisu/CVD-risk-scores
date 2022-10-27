@@ -30,7 +30,7 @@ def main():
         changelog = (DIR / 'CHANGELOG.md').read_text()
         __version__, *_ = re.findall(r"\[([0-9.]+)]", changelog)
     except (FileNotFoundError, ValueError) as ex:
-        __version__ = '1.0.0'
+        __version__ = '1.0.1'
         logging.error(ex)
         logging.error(traceback.print_exc())
         logging.warning(f'Unable to get semantic release version. Setting version to {__version__}.')
