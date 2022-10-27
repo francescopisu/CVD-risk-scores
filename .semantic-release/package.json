@@ -1,6 +1,6 @@
 {
     "name": "CVD-risk-scores",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "scripts": {
       "installInRoot": "npm install && mv ./node_modules ./../node_modules"
     },
