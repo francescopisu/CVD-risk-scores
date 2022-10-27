@@ -85,16 +85,16 @@ workflows:
             branches:
               only: "main"
       - build-and-test:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: "main"
+          # filters:
+          #   tags:
+          #     only: /.*/
+          #   branches:
+          #     ignore: "main"
       - release:
           requires:
             - build-and-test
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^deploy-.*/
+          # filters:
+          #   branches:
+          #     ignore: /.*/
+          #   tags:
+          #     only: /^deploy-.*/
