@@ -1,28 +1,102 @@
 import abc
 import numpy as np
+import pandas as pd
 from functools import partial
 from pydantic import validate_arguments, Field
 from pydantic.typing import Annotated
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Dict
 
 from .typings import ArrayLike
-from .templates import FraminghamSubject
+from .templates import FraminghamSubject, BaseSubject
 
 class RiskModel(abc.ABC):
     """
     The risk model base class. It is based upon the pytorch paradigm with a forward method that implements
-    the computation.
+    the computation.  When the class is called via the `__call__` method, the `forward` method is invoked.
 
     Methods
     ----------
-    forward(self, *args, **kwargs):
-        an abstract method that each custom risk model must implement. 
-        When the class is called via the `__call__` method, the `forward` method is invoked.
+    _compute_single(self, subject):
+        an abstract method for computing the score for a single subject that must be 
+        implemented in each custom risk model. 
     """
-    
     @abc.abstractmethod
-    def forward(self, *args, **kwargs):
+    def _compute_single(self, subject: BaseSubject) -> float:
         pass
+
+    def _compute_single_from_slice(self, aslice: ArrayLike, columns: List[str], indexes: List[int]) -> float:
+        """Takes a slice of an array and computes the risk.
+
+        Parameters
+        ----------
+        aslice : ArrayLike
+            A slice of an array of covariates
+        columns : List[str]
+            List of covariate names
+        indexes : List[int]
+            List of covariate indexes in the slice
+
+        Returns
+        -------
+        float
+            The risk score
+        """
+        sub = self.template(**dict(zip(columns, aslice[indexes])))
+        return self.fn(sub)
+
+    def forward(self, data: ArrayLike, columns_map: Dict[str, str] = None) -> ArrayLike:
+        """
+        Computes risk scores for each subject in the `data` array - i.e., a row -
+        and for the specified `columns` in a specific order (i.e., `indexes`).
+
+        Example:
+        --------
+        Suppose we need `age`, `sex` and `HDL` for computing the score.
+        Suppore that we also have other columns in a data array like the following:
+
+        age | cov1 | sex | cov2 | HDL
+
+        Then, we would specificy the following variables:
+        `columns_map = {
+            "age": "age",
+            "cov1: "cov1",
+            "sex": "sex",
+            "cov2: "cov2",
+            "HDL": "HDL"
+        }
+
+        Parameters:
+        -----------
+        data: ArrayLike
+            the data array cointaining a subject in each row
+        columns_map: Dict[str, str]
+            A dictionary defining the mapping between the user's columns
+            necessary to compute the score and the expected columns
+            from the FraminghamRiskScore model. 
+            If data is either a list of lists or a numpy array,
+            the keys of this dictionary must be in the correct order
+            so that data can be cast into a pandas DataFrame.
+        
+        Returns:
+        --------
+        ArrayLike
+            an array of scores, one for each subject
+        """
+        if not isinstance(columns_map, dict):
+            raise ValueError("columns_map must be a dictionary mapping your column names to the \
+                             expected columns.")
+        if not isinstance(data, pd.DataFrame) and isinstance(data, (list, np.ndarray)):
+            data = pd.DataFrame(data=data, columns=list(columns_map.keys()))
+
+        indexes = [data.columns.get_loc(c) for c in columns_map.keys()]
+
+        scores = np.apply_along_axis(partial(self._compute_single_from_slice, 
+                                             columns=list(columns_map.values()),
+                                             indexes=indexes), 
+                                   axis=1, 
+                                   arr=data)
+        
+        return scores        
 
     def __call__(self, *args, **kwargs):
         out = self.forward(*args, **kwargs)
@@ -36,11 +110,19 @@ class FraminghamRiskScore(RiskModel):
 
     Examples:
     ------
-    >>> # data = <YOUR DATA>
+    >>> # data = <YOUR DATA> # either a pandas Dataframe, a numpy array or a list of lists
     >>> frs = FraminghamRiskScore()
-    >>> columns = ["sex", "age", "SBP_nt", "SBP_t", "tch", "HDL", "smoking", "diabetes"]
-    >>> indexes = [0, 1, 2, 3, 4, 5, 6, 7]
-    >>> scores = frs(data, columns=columns, indexes=indexes)
+    >>> columns_map = {
+    >>>    "sex": "sex",
+    >>>    "age": "age",
+    >>>    "SBP_nt": "SBP_nt",
+    >>>    "SBP_t": "SBP_t",
+    >>>    "tch": "tch",
+    >>>    "HDL": "HDL",
+    >>>    "smoking": "smoking",
+    >>>    "diabetes": "diabetes"
+    >>> }
+    >>> scores = frs(data, columns_map=columns_map)
 
     References:
     -----------
@@ -70,12 +152,12 @@ class FraminghamRiskScore(RiskModel):
                 "diabetes": 0.57367
             }
         }
-        self.fn = self.__compute_single
+        self.fn = self._compute_single
         self.template = FraminghamSubject
     
 
     @validate_arguments
-    def __compute_single(self, subject: FraminghamSubject) -> float:
+    def _compute_single(self, subject: FraminghamSubject) -> float:
         """Compute the risk score for a single subject
 
         Parameters
@@ -99,46 +181,3 @@ class FraminghamRiskScore(RiskModel):
             lin_comb += curr_val * beta
 
         return 1 - np.power(self.baseline_risk[sex], np.exp(lin_comb - self.mean_risk[sex]))
-
-    
-    def forward(self, data: ArrayLike, columns: List[str], indexes: List[int]) -> ArrayLike:
-        """
-        Computes risk scores for each subject in the `data` array - i.e., a row -
-        and for the specified `columns` in a specific order (i.e., `indexes`).
-
-        Example:
-        --------
-        Suppose we need `age`, `sex` and `HDL` for computing the score.
-        Suppore that we also have other columns in a data array like the following:
-
-        age | SBP_nt | sex | smoking | HDL
-
-        Then, we would specificy the following variables:
-        `columns = ["age", "sex", "HDL"]`
-        `indexes = [0, 2, 4]`
-
-        Parameters:
-        -----------
-        data: ArrayLike
-            the data array cointaining a subject in each row
-        columns: List[str]
-            The list of columns that will be used to compute the score
-        indexes: List[int]
-            Indexes of the columns that will be used to compute the score
-        
-        Returns:
-        --------
-        ArrayLike
-            an array of scores, one for each subject
-        """
-        def compute_single_from_slice(aslice, columns: List[str], indexes: List[int]) -> float:
-            sub = self.template(**dict(zip(columns, aslice[indexes])))
-            return self.fn(sub)
-
-        scores = np.apply_along_axis(partial(compute_single_from_slice, 
-                                             columns=columns,
-                                             indexes=indexes), 
-                                   axis=1, 
-                                   arr=data)
-        
-        return scores

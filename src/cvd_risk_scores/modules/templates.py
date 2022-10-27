@@ -41,7 +41,7 @@ class FraminghamSubject(BaseSubject):
         Is diabetic.
     """
     sex : Sex
-    age : Annotated[int, Field(gt=30)]
+    age : Annotated[float, Field(gt=30.0)]
     HDL : float
     tch : float
     SBP_nt : float
