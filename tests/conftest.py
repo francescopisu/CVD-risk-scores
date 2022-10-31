@@ -3,6 +3,8 @@ import pandas as pd
 import pytest
 
 from src.config import settings
+from src.cvd_risk_scores.modules import typings
+
 
 @pytest.fixture
 def rng() -> np.random.Generator:
